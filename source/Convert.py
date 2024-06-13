@@ -1,8 +1,8 @@
 def toCirpher(num, base = 128):
 	mess = ''
 	while num:
-		mess += chr(num % 128)
-		num //= 128
+		mess += chr(num % base)
+		num //= base
 	
 	mess = mess[::-1]
 	return mess
