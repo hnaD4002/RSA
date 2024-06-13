@@ -39,7 +39,7 @@ def main():
     file = open("/Users/danh/Desktop/RSA/data/PrivateKey.txt", mode="w")
     file.write(str(n) + "\n" + str(getD(e, phi)))
     file.close()
-    print("Done!")
+    print("Key creation successful!")
 
 
 main()

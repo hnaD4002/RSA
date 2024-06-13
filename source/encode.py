@@ -1,8 +1,10 @@
-
-import CreateKey
+import time
+import sys
 import MyMath
 import Convert
-base = 7930 # Để mã hoá tiếng việt
+import threading
+
+base = 7930  # Để mã hoá tiếng việt
 
 
 def getKey(file):
@@ -20,31 +22,58 @@ def getData(path):
     return data
 
 
-def encode(n, e, data, path):
-    fe = open("/Users/danh/Desktop/RSA/data/encode.txt", 'w')
+def writeFile(mess, path):
     file = open(path, "w")
+    file.write(mess)
+    file.close()
+    return None
+
+
+def print_status():
+    dots = 0
+    while True:
+        time.sleep(1)
+        print(f"\rThe program is encoding{'.' * dots}", end="", flush=True)
+        dots = (dots + 1) % 4
+
+
+def encode(n, e, data):
     fs = open("/Users/danh/Desktop/RSA/data/size.txt", "w")
-    cirpher = ''
+    cirpher = ""
 
     for c in data:
         ci = MyMath.powMod(ord(c), e, n)
-        fe.write(str(ci) + '\n')
         ci_str = Convert.toCirpher(ci, base)
         fs.write(str(len(ci_str)) + " ")
         cirpher += ci_str
-        file.write(ci_str)
 
-    file.close()
     fs.close()
-    print(len(cirpher))
+    print("Encryption successful!!")
     return cirpher
 
 
-def main():
+def main(path, path2):
     n, e = getKey("/Users/danh/Desktop/RSA/data/PublicKey.txt")
-    data = getData("/Users/danh/Desktop/RSA/data/data.txt")
-    cir = encode(n, e, data, "/Users/danh/Desktop/RSA/data/cirpher_text.txt")
+    data = getData(path2)
+    cir = encode(n, e, data)
+    writeFile(cir, path)
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        if len(sys.argv) != 3:
+            raise ValueError("Số lượng đối số không hợp lệ.")
+        else:
+            import CreateKey
+
+            status_thread = threading.Thread(target=print_status, daemon=True)
+            status_thread.start()
+            start = time.time()
+            main(sys.argv[1], sys.argv[2])
+            end = time.time()
+            print(f"Encoding time: {end - start:.5f}s")
+    except ValueError as e:
+        print(f"Error: {e}")
+        print("Usages: python3 main.py cir.txt data.txt")
+    finally:
+        print("Ends.")

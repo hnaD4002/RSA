@@ -1,50 +1,74 @@
 import Convert
 import MyMath
 import sys
+import time
+import threading
+
 base = 7930
 
+
 def getKey(file):
-    f = open(file, "r")
-    n = int(f.readline())
-    d = int(f.readline())
-    f.close()
+    with open(file, "r") as f:
+        n = int(f.readline())
+        d = int(f.readline())
     return n, d
 
 
 def getData(path):
-    file = open(path, "r")
-    data = file.read()
-    file.close()
+    with open(path, "r") as file:
+        data = file.read()
     return data
 
 
 def decode(n, d, cir, path):
-    file = open(path, "w")
-    fd = open("/Users/danh/Desktop/RSA/data/decode.txt", 'w')
-    fs = open("/Users/danh/Desktop/RSA/data/size.txt", "r")
-    sizes = list(map(int, fs.read().split()))
-    fs.close()
-    plain_text = ''
-    index = 0
+    with open(path, "w") as file, open(
+        "/Users/danh/Desktop/RSA/data/size.txt", "r"
+    ) as fs:
+        sizes = list(map(int, fs.read().split()))
+        plain_text = ""
 
-    for size in sizes:
-        m_str = cir[index : index + size]
-        m = Convert.toPlain(m_str, base)
-        fd.write(str(m) + '\n')
-        p = MyMath.powMod(m, d, n)
-        plain_text += chr(p)
-        file.write(chr(p))
-        index += size
+        index = 0
 
-    file.close()
+        for size in sizes:
+            c_str = cir[index : index + size]
+            p = Convert.toPlain(c_str, base)
+            p = MyMath.powMod(p, d, n)
+            p_str = chr(p)
+            plain_text += p_str
+            file.write(p_str)
+            index += size
+
+    print("\nDecoding successful!")
     return plain_text
 
 
-def main():
+def main(path, path2):
     n, d = getKey("/Users/danh/Desktop/RSA/data/PrivateKey.txt")
-    cir = getData("/Users/danh/Desktop/RSA/data/cirpher_text.txt")
-    plain = decode(n, d, cir, "/Users/danh/Desktop/RSA/data/plain_text.txt")
+    cir = getData(path2)
+    plain = decode(n, d, cir, path)
+
+
+def print_status():
+    dots = 0
+    while True:
+        time.sleep(1)
+        print(f"\rChương trình đang hoạt động{'.' * dots}", end="", flush=True)
+        dots = (dots + 1) % 4
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        if len(sys.argv) != 3:
+            raise ValueError("Số lượng đối số không hợp lệ.")
+        else:
+            status_thread = threading.Thread(target=print_status, daemon=True)
+            status_thread.start()
+            start = time.time()
+            main(sys.argv[1], sys.argv[2])
+            end = time.time()
+            print(f"\nDecoding time: {end - start:.5f}s")
+    except ValueError as e:
+        print(f"Error: {e}")
+        print("Usages: python3 main.py text.txt")
+    finally:
+        print("Ends.")
